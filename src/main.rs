@@ -1,15 +1,21 @@
 use std::env;
-use std::fs;
+use std::process;
+
+use rust_grep::Config;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    
-    let query = &args[1];
-    let file_path = &args[2];
+     
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        println!("Error parsing arguments: {err}");
+        process::exit(1);
+    });
 
-    println!("{}\n{}", query, file_path);
+    println!("Searching for: {}", config.query);
+    println!("In file: {}\n\n", config.file_path);
 
-    let contents = fs::read_to_string(file_path)
-        .expect_err("Unable to read file!");
-    println!("\nFile:\n\n{}", contents);
+    if let Err(e) = rust_grep::run(config) {
+        println!("Error: {e}");
+        process::exit(1);
+    };
 }
